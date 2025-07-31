@@ -76,16 +76,29 @@ Exception file:
 Step 10: create apis using postman
 
 Admin apis
+
   GET /admin/users
+  
   GET /admin/users/by-date
+  
   GET /admin/users/name/{name}
+  
   GET /admin/users/by-competition
+
 Auth apis
+
   POST /auth/admin/signup
+  
   POST /auth/admin/login
+  
   POST/auth/user/signup
+  
   POST/auth/user/login
+  
 User apis
+
   POST /user/competitions/register
+  
   GET/user/competitions/{userid}
+  
   GET /user/competitions
