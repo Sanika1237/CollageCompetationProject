@@ -4,7 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>College Competition</title>
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5; /* Light gray background */
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 40px 60px; /* Increased padding for more space */
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 600px; /* Increased max-width for buttons to fit side-by-side */
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 40px; /* Increased space below heading */
+            font-size: 2.2em; /* Larger heading */
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: row; /* Arranges items in a row */
+            justify-content: center; /* Centers buttons horizontally */
+            gap: 30px; /* Space between buttons */
+            flex-wrap: wrap; /* Allows buttons to wrap to next line on smaller screens if needed */
+        }
+
+        .btn {
+            display: block;
+            padding: 18px 30px; /* Increased padding for larger buttons */
+            background-color: #007bff; /* Blue button color */
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1.4em; /* Larger font size for buttons */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3); /* Subtle shadow for buttons */
+            min-width: 120px; /* Ensures a minimum width for each button */
+            text-align: center; /* Centers text within the button */
+        }
+
+        .btn:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+            transform: translateY(-2px); /* Slight lift effect on hover */
+        }
+    </style>
 </head>
 <body>
 <div class="container">
