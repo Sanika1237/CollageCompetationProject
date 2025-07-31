@@ -51,17 +51,17 @@ Interface files:
 
 1.	UserRepository
 
--extends JpaRepository to provide CRUD operations for User entities
+                -extends JpaRepository to provide CRUD operations for User entities
 
--It includes derived and custom queries using both JPQL and native SQL to fetch users
+               -It includes derived and custom queries using both JPQL and native SQL to fetch users
 
--Methods like findUsersByRole and countUsersByRole help in filtering users by their roles.
+               -Methods like findUsersByRole and countUsersByRole help in filtering users by their roles.
 
 2.CompetationRepository
 
--extends JpaRepository to manage Competition entities with standard CRUD and custom query methods
+            -extends JpaRepository to manage Competition entities with standard CRUD and custom query methods
 
--defines both JPQL and native SQL queries to fetch competitions by user ID, competition name, date, or a combination of name and date
+            -defines both JPQL and native SQL queries to fetch competitions by user ID, competition name, date, or a combination of name and date
 
 Step 6: create a service package
 
