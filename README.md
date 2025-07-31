@@ -1,4 +1,4 @@
-# ItariumProject
+# CollageCompetationProject
 
 Step 1: create a spring boot project using spring initializer with dependencies
 
