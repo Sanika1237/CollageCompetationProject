@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard</title>
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .modal {
@@ -65,13 +64,26 @@
 <div class="container mx-auto p-6 bg-white rounded-lg shadow-lg mt-8">
   <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Registered Users and their Competitions</h2>
 
-  <!-- Logout Button -->
   <div class="text-right mb-4">
-    <button onclick="logout()" 
+    <button onclick="logout()"
             class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
       Logout
     </button>
   </div>
+
+  <div class="mb-6 flex space-x-4">
+    <input type="text" id="searchInput" placeholder="Search by name or YYYY-MM-DD date..."
+           class="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <button onclick="filterUsers()"
+            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+      Search
+    </button>
+    <button onclick="clearSearch()"
+            class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition">
+      Clear
+    </button>
+  </div>
+
 
   <div class="table-container overflow-x-auto rounded-lg shadow-md">
     <table id="usersTable" class="min-w-full divide-y divide-gray-200">
@@ -91,7 +103,6 @@
   </div>
 </div>
 
-<!-- Custom Alert Modal -->
 <div id="customAlertModal" class="modal">
   <div class="modal-content">
     <span class="close-button" onclick="closeAlertModal()">&times;</span>
@@ -104,6 +115,8 @@
 </div>
 
 <script>
+  let allUsersData = []; // To store the original fetched data
+
   // Logout function
   function logout() {
       localStorage.removeItem("token");
@@ -121,6 +134,42 @@
     document.getElementById('customAlertModal').style.display = 'none';
   }
 
+  function displayUsers(usersToDisplay) {
+      const tbody = document.querySelector("#usersTable tbody");
+      tbody.innerHTML = ""; // Clear existing rows
+
+      if (usersToDisplay.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No matching users found.</td></tr>`;
+          return;
+      }
+
+      usersToDisplay.forEach(user => {
+          if (user.competitions && user.competitions.length > 0) {
+              user.competitions.forEach(comp => {
+                  tbody.innerHTML += `
+                  <tr>
+                      <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
+                      <td class="px-6 py-4 whitespace-nowrap">${user.username}</td>
+                      <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
+                      <td class="px-6 py-4 whitespace-nowrap">${user.collegeName}</td>
+                      <td class="px-6 py-4 whitespace-nowrap">${comp.name}</td>
+                      <td class="px-6 py-4 whitespace-nowrap">${comp.date}</td>
+                  </tr>`;
+              });
+          } else {
+              tbody.innerHTML += `
+              <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
+                  <td class="px-6 py-4 whitespace-nowrap">${user.username}</td>
+                  <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
+                  <td class="px-6 py-4 whitespace-nowrap">${user.collegeName}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-gray-400">N/A</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-gray-400">N/A</td>
+              </tr>`;
+          }
+      });
+  }
+
   async function fetchUsers() {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -134,43 +183,9 @@
               headers: { "Authorization": "Bearer " + token }
           });
 
-          const tbody = document.querySelector("#usersTable tbody");
-          tbody.innerHTML = "";
-
           if (res.ok) {
-              const users = await res.json();
-
-              if (users.length === 0) {
-                  tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No registered users found.</td></tr>`;
-                  return;
-              }
-
-              users.forEach(user => {
-                  if (user.competitions && user.competitions.length > 0) {
-                      user.competitions.forEach(comp => {
-                          tbody.innerHTML += `
-                          <tr>
-                              <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
-                              <td class="px-6 py-4 whitespace-nowrap">${user.username}</td>
-                              <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
-                              <td class="px-6 py-4 whitespace-nowrap">${user.collegeName}</td>
-                              <td class="px-6 py-4 whitespace-nowrap">${comp.name}</td>
-                              <td class="px-6 py-4 whitespace-nowrap">${comp.date}</td>
-                          </tr>`;
-                      });
-                  } else {
-                      tbody.innerHTML += `
-                      <tr>
-                          <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
-                          <td class="px-6 py-4 whitespace-nowrap">${user.username}</td>
-                          <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
-                          <td class="px-6 py-4 whitespace-nowrap">${user.collegeName}</td>
-                          <td class="px-6 py-4 whitespace-nowrap text-gray-400">N/A</td>
-                          <td class="px-6 py-4 whitespace-nowrap text-gray-400">N/A</td>
-                      </tr>`;
-                  }
-              });
-
+              allUsersData = await res.json(); // Store the fetched data
+              displayUsers(allUsersData); // Display all users initially
           } else {
               let errorMessage = "Failed to fetch users. Server responded with an error.";
               try {
@@ -194,6 +209,59 @@
           console.error("Network error fetching users:", networkError);
       }
   }
+
+  // Helper function to check if a string is a valid date in YYYY-MM-DD format
+  function isValidDate(dateString) {
+      const regEx = /^\d{4}-\d{2}-\d{2}$/;
+      if(!dateString.match(regEx)) return false;  // Invalid format
+      const d = new Date(dateString);
+      const dNum = d.getTime();
+      if(!dNum && dNum !== 0) return false; // NaN value, invalid date
+      return d.toISOString().slice(0,10) === dateString;
+  }
+
+  function filterUsers() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+
+      if (!searchTerm) {
+          displayUsers(allUsersData); // If search term is empty, show all users
+          return;
+      }
+
+      let isDateSearch = false;
+      let formattedSearchTerm = searchTerm;
+
+      // Check if the search term looks like a date (e.g., YYYY-MM-DD)
+      if (isValidDate(searchTerm)) {
+          isDateSearch = true;
+      }
+
+      const filteredUsers = allUsersData.map(user => {
+          const filteredCompetitions = user.competitions.filter(comp => {
+              if (isDateSearch) {
+                  // Search by date (exact match for now)
+                  return comp.date === formattedSearchTerm;
+              } else {
+                  // Search by competition name (case-insensitive includes)
+                  return comp.name.toLowerCase().includes(searchTerm);
+              }
+          });
+
+          if (filteredCompetitions.length > 0) {
+              return { ...user, competitions: filteredCompetitions };
+          }
+          return null;
+      }).filter(user => user !== null);
+
+      displayUsers(filteredUsers);
+  }
+
+  function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      displayUsers(allUsersData); // Re-display all original data
+  }
+
+  // Initial fetch of users when the page loads
   fetchUsers();
 </script>
 </body>
