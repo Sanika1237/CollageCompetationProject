@@ -14,9 +14,9 @@ Step 2: add configuration in application.properties
 
 Step 3: create a usersData.sql file 
 
-            -Database name: collegeCdb
+               -Database name: collegeCdb
             
-            -Table names: 
+               -Table names: 
             
             1.users
             
@@ -69,9 +69,9 @@ Class files:
 
 1.UserService
 
--it handles logic related to User entities
+            -it handles logic related to User entities
 
--It uses UserRepository for database interactions and PasswordEncoder to securely hash user passwords during registration
+            -It uses UserRepository for database interactions and PasswordEncoder to securely hash user passwords during registration
 
  2. CompetitionService
     
@@ -107,9 +107,9 @@ Class files:
 
 1. AdminController
    
--It uses UserRepository to access user data and is mapped under the “/admin” URL path.
+                 -It uses UserRepository to access user data and is mapped under the “/admin” URL path.
 
- -The “/users” endpoint returns all users, while “/users/byDate” and “/users/byname” fetch users based on competition date and competition name, respectively.
+                 -The “/users” endpoint returns all users, while “/users/byDate” and “/users/byname” fetch users based on competition date and competition name, respectively.
  
 2. AuthController:
                
