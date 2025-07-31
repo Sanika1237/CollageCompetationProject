@@ -1,7 +1,8 @@
 package com.collageCompetation.collegeCompetationDemo.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference; // Import this
 import jakarta.persistence.*;
-import java.sql.Date;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "competitions")
@@ -11,37 +12,32 @@ public class Competition {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "competition_name",nullable = false)
-    private String competitionName;
+    @Column(name = "competitionName",nullable = false)
+    private String name;  // Competition name
 
-    @Column(name = "date",nullable = false)
-    private java.sql.Date date;
+    @Column(nullable = false)
+    private LocalDate date;  // Competition date
 
-    @Column(name = "college_name")
+    @Column(name = "college_name", nullable = false)
     private String collegeName;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id",nullable = false)
-    private User registeredBy;
+    @ManyToOne(fetch = FetchType.EAGER) // <-- Change LAZY to EAGER here
+    @JoinColumn(name = "user_id")
+    @JsonBackReference
+    private User user;
 
-    public Competition() {
-    }
+    // Constructors
+    public Competition() {}
 
-    public Competition(String competitionName, Date date, String collegeName, User registeredBy) {
-        this.competitionName = competitionName;
-        this.date = date;
-        this.collegeName = collegeName;
-        this.registeredBy = registeredBy;
-    }
-
-    public Competition(Long id, String competitionName, Date date, String collegeName, User registeredBy) {
+    public Competition(Long id, String name, LocalDate date, String collegeName, User user) {
         this.id = id;
-        this.competitionName = competitionName;
+        this.name = name;
         this.date = date;
         this.collegeName = collegeName;
-        this.registeredBy = registeredBy;
+        this.user = user;
     }
 
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -50,19 +46,19 @@ public class Competition {
         this.id = id;
     }
 
-    public String getCompetitionName() {
-        return competitionName;
+    public String getName() {
+        return name;
     }
 
-    public void setCompetitionName(String competitionName) {
-        this.competitionName = competitionName;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public Date getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 
@@ -74,12 +70,11 @@ public class Competition {
         this.collegeName = collegeName;
     }
 
-    public User getRegisteredBy() {
-        return registeredBy;
+    public User getUser() {
+        return user;
     }
 
-    public void setRegisteredBy(User registeredBy) {
-        this.registeredBy = registeredBy;
+    public void setUser(User user) {
+        this.user = user;
     }
-
 }

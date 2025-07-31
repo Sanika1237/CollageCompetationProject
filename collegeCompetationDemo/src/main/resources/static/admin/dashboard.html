@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom styles for the modal */
+    .modal {
+      display: none; /* Hidden by default */
+      position: fixed; /* Stay in place */
+      z-index: 1000; /* Sit on top */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      overflow: auto; /* Enable scroll if needed */
+      background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 20px;
+      border-radius: 0.5rem; /* rounded-lg */
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+      width: 80%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .close-button {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    .close-button:hover,
+    .close-button:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    /* Table styling */
+    th, td {
+      padding: 0.75rem; /* p-3 */
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0; /* border-b border-gray-200 */
+    }
+    th {
+      background-color: #edf2f7; /* bg-gray-100 */
+      font-weight: 600; /* font-semibold */
+      color: #2d3748; /* text-gray-700 */
+      text-transform: uppercase;
+      font-size: 0.75rem; /* text-xs */
+      letter-spacing: 0.05em;
+    }
+    tbody tr:hover {
+      background-color: #f7fafc; /* hover:bg-gray-50 */
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+<div class="container mx-auto p-6 bg-white rounded-lg shadow-lg mt-8">
+  <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Registered Users and their Competitions</h2>
+  <div class="table-container overflow-x-auto rounded-lg shadow-md">
+    <table id="usersTable" class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">User ID</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">College Name</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Competition Name</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Competition Date</th>
+      </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+      <!-- Table rows will be inserted here by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Custom Alert Modal -->
+<div id="customAlertModal" class="modal">
+  <div class="modal-content">
+    <span class="close-button" onclick="closeAlertModal()">&times;</span>
+    <p id="alertMessage" class="text-lg font-semibold text-gray-800"></p>
+    <button onclick="closeAlertModal()"
+            class="mt-4 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out">
+      OK
+    </button>
+  </div>
+</div>
+
+<script>
+  // Function to show the custom alert modal
+  function showAlertModal(message) {
+    document.getElementById('alertMessage').innerText = message;
+    document.getElementById('customAlertModal').style.display = 'flex';
+  }
+
+  // Function to close the custom alert modal
+  function closeAlertModal() {
+    document.getElementById('customAlertModal').style.display = 'none';
+  }
+
+  async function fetchUsers() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+          showAlertModal("Authentication token not found. Please log in as Admin.");
+          // Changed redirection path to be more explicit
+          window.location.href = "./login.html"; // Redirect to admin login if no token
+          return;
+      }
+
+      try {
+          // Fetch users from the backend
+          const res = await fetch("http://localhost:8080/admin/users", {
+              headers: { "Authorization": "Bearer " + token }
+          });
+
+          const tbody = document.querySelector("#usersTable tbody");
+          tbody.innerHTML = ""; // Clear existing rows
+
+          if (res.ok) {
+              const users = await res.json();
+
+              if (users.length === 0) {
+                  tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No registered users found.</td></tr>`;
+                  return;
+              }
+
+              users.forEach(user => {
+                  if (user.competitions && user.competitions.length > 0) {
+                      user.competitions.forEach(comp => {
+                          tbody.innerHTML += `
+                          <tr>
+                              <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
+                              <td class="px-6 py-4 whitespace-nowrap">${user.username}</td>
+                              <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
+                              <td class="px-6 py-4 whitespace-nowrap">${user.collegeName}</td>
+                              <td class="px-6 py-4 whitespace-nowrap">${comp.name}</td>
+                              <td class="px-6 py-4 whitespace-nowrap">${comp.date}</td>
+                          </tr>`;
+                      });
+                  } else {
+                      // If a user has no competitions, display their details with N/A for competition fields
+                      tbody.innerHTML += `
+                      <tr>
+                          <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
+                          <td class="px-6 py-4 whitespace-nowrap">${user.username}</td>
+                          <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
+                          <td class="px-6 py-4 whitespace-nowrap">${user.collegeName}</td>
+                          <td class="px-6 py-4 whitespace-nowrap text-gray-400">N/A</td>
+                          <td class="px-6 py-4 whitespace-nowrap text-gray-400">N/A</td>
+                      </tr>`;
+                  }
+              });
+
+          } else {
+              // Handle HTTP errors (e.g., 401 Unauthorized, 403 Forbidden, 500 Internal Server Error)
+              let errorMessage = "Failed to fetch users. Server responded with an error.";
+              try {
+                  const errorData = await res.json();
+                  if (errorData.message) {
+                      errorMessage = errorData.message;
+                  }
+              } catch (jsonParseError) {
+                  console.warn("Could not parse error response as JSON:", jsonParseError);
+              }
+              showAlertModal(errorMessage + " Status: " + res.status);
+              console.error("Error fetching users:", res.status, errorMessage);
+
+              // Specific handling for authentication/authorization issues
+              if (res.status === 401 || res.status === 403) {
+                  showAlertModal("You are not authorized to view this page. Please log in with admin credentials.");
+                  localStorage.removeItem("token"); // Clear invalid token
+                  // Changed redirection path to be more explicit
+                  window.location.href = "./login.html"; // Redirect to admin login
+              }
+          }
+      } catch (networkError) {
+          // This catch block handles network-level errors (e.g., server not running, CORS issues)
+          showAlertModal("Network error: Could not connect to the backend server. Please ensure the server is running and accessible.");
+          console.error("Network error fetching users:", networkError);
+      }
+  }
+  fetchUsers();
+</script>
+</body>
+</html>

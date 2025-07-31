@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Registered Competitions</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom styles for the modal */
+    .modal {
+      display: none; /* Hidden by default */
+      position: fixed; /* Stay in place */
+      z-index: 1000; /* Sit on top */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      overflow: auto; /* Enable scroll if needed */
+      background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 20px;
+      border-radius: 0.5rem; /* rounded-lg */
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+      width: 80%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .close-button {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    .close-button:hover,
+    .close-button:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    /* Table styling */
+    th, td {
+      padding: 0.75rem; /* p-3 */
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0; /* border-b border-gray-200 */
+    }
+    th {
+      background-color: #edf2f7; /* bg-gray-100 */
+      font-weight: 600; /* font-semibold */
+      color: #2d3748; /* text-gray-700 */
+      text-transform: uppercase;
+      font-size: 0.75rem; /* text-xs */
+      letter-spacing: 0.05em;
+    }
+    tbody tr:hover {
+      background-color: #f7fafc; /* hover:bg-gray-50 */
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+<div class="container mx-auto p-6 bg-white rounded-lg shadow-lg mt-8">
+  <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">My Registered Competitions</h2>
+  <div class="table-container overflow-x-auto rounded-lg shadow-md">
+    <table id="competitionsTable" class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Name</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">College Name</th>
+      </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+      <!-- Table rows will be inserted here by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Custom Alert Modal -->
+<div id="customAlertModal" class="modal">
+  <div class="modal-content">
+    <span class="close-button" onclick="closeAlertModal()">&times;</span>
+    <p id="alertMessage" class="text-lg font-semibold text-gray-800"></p>
+    <button onclick="closeAlertModal()"
+            class="mt-4 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out">
+      OK
+    </button>
+  </div>
+</div>
+
+<script>
+  // Function to show the custom alert modal
+  function showAlertModal(message) {
+    document.getElementById('alertMessage').innerText = message;
+    document.getElementById('customAlertModal').style.display = 'flex';
+  }
+
+  // Function to close the custom alert modal
+  function closeAlertModal() {
+    document.getElementById('customAlertModal').style.display = 'none';
+  }
+
+  async function fetchCompetitions() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+          showAlertModal("Authentication token not found. Please log in.");
+          window.location.href = "./login.html";
+          return;
+      }
+
+      try {
+          const res = await fetch("http://localhost:8080/user/competitions", {
+              headers: { "Authorization": "Bearer " + token }
+          });
+
+          if (res.ok) {
+              const competitions = await res.json();
+              const tbody = document.querySelector("#competitionsTable tbody");
+              tbody.innerHTML = "";
+
+              if (competitions.length === 0) {
+                  tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">No competitions registered yet.</td></tr>`;
+                  return;
+              }
+
+              competitions.forEach(comp => {
+                  tbody.innerHTML += `
+                  <tr>
+                      <td class="px-6 py-4 whitespace-nowrap">${comp.name}</td>
+                      <td class="px-6 py-4 whitespace-nowrap">${comp.date}</td>
+                      <td class="px-6 py-4 whitespace-nowrap">${comp.collegeName}</td>
+                  </tr>`;
+              });
+          } else {
+              let errorMessage = "Failed to load competitions!";
+              try {
+                  const errorResult = await res.json();
+                  if (errorResult.message) {
+                      errorMessage = errorResult.message;
+                  }
+              } catch (jsonError) {
+                  console.warn("Could not parse error response as JSON:", jsonError);
+              }
+              showAlertModal(errorMessage + " Status: " + res.status);
+              console.error("Fetch error:", res.status, errorMessage);
+
+              if (res.status === 401 || res.status === 403) {
+                  showAlertModal("You are not authorized to view this page. Please log in.");
+                  localStorage.removeItem("token");
+                  window.location.href = "./login.html";
+              }
+          }
+      } catch (networkError) {
+          showAlertModal("Network error: Could not load competitions. Ensure backend is running. Error: " + networkError.message);
+          console.error("Fetch error:", networkError);
+      }
+  }
+  fetchCompetitions();
+</script>
+</body>
+</html>

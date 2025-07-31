@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register Competition</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom styles for the modal */
+    .modal {
+      display: none; /* Hidden by default */
+      position: fixed; /* Stay in place */
+      z-index: 1000; /* Sit on top */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      overflow: auto; /* Enable scroll if needed */
+      background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 20px;
+      border-radius: 0.5rem; /* rounded-lg */
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+      width: 80%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .close-button {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    .close-button:hover,
+    .close-button:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center font-sans">
+
+<div class="form-container bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+  <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Register for Competition</h2>
+  <form id="competitionForm" class="space-y-4">
+    <input type="text" name="name" placeholder="Competition Name" required
+           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <input type="date" name="date" required
+           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <input type="text" name="collegeName" placeholder="College Name" required
+           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <button type="submit"
+            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out">
+      Register
+    </button>
+  </form>
+</div>
+
+<!-- Custom Alert Modal -->
+<div id="customAlertModal" class="modal">
+  <div class="modal-content">
+    <span class="close-button" onclick="closeAlertModal()">&times;</span>
+    <p id="alertMessage" class="text-lg font-semibold text-gray-800"></p>
+    <button onclick="closeAlertModal()"
+            class="mt-4 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out">
+      OK
+    </button>
+  </div>
+</div>
+
+<script>
+  // Function to show the custom alert modal
+  function showAlertModal(message) {
+    document.getElementById('alertMessage').innerText = message;
+    document.getElementById('customAlertModal').style.display = 'flex';
+  }
+
+  // Function to close the custom alert modal
+  function closeAlertModal() {
+    document.getElementById('customAlertModal').style.display = 'none';
+  }
+
+  document.getElementById("competitionForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+          showAlertModal("Authentication token not found. Please log in.");
+          window.location.href = "./login.html";
+          return;
+      }
+
+      // In a real application, the user ID for registration should come from the authenticated user's token on the backend, not sent from the frontend.
+      // For demonstration, if your backend *requires* user.id in the payload for /user/register, uncomment and provide it:
+      const data = {
+          name: e.target.name.value,
+          date: e.target.date.value,
+          collegeName: e.target.collegeName.value,
+          user: {
+              // IMPORTANT: Replace 7 with the actual ID of the logged-in user.
+              // This 'userId' must be the ID of the currently logged-in user.
+              // You would typically decode the JWT token to get this ID on the frontend,
+              // or let the backend infer it from the token in the Authorization header.
+              id: 7
+          }
+      };
+
+      try {
+          // Changed URL to /user/register to match UserController
+          const res = await fetch("http://localhost:8080/user/register", {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": "Bearer " + token
+              },
+              body: JSON.stringify(data)
+          });
+
+          if (res.ok) {
+              showAlertModal("Registered successfully! Redirecting to competitions list.");
+              window.location.href = "./competitions.html";
+          } else {
+              let errorMessage = "Registration failed!";
+              try {
+                  const errorResult = await res.json();
+                  if (errorResult.message) {
+                      errorMessage = errorResult.message;
+                  }
+              } catch (jsonError) {
+                  console.error("Error parsing response JSON:", jsonError);
+              }
+              showAlertModal(errorMessage + " Status: " + res.status);
+              console.error("Fetch error:", res.status, errorMessage);
+          }
+      } catch (networkError) {
+          showAlertModal("Network error: Could not connect to the server. Please ensure the backend is running and accessible. Error: " + networkError.message);
+          console.error("Network error during competition registration:", networkError);
+      }
+  });
+</script>
+</body>
+</html>

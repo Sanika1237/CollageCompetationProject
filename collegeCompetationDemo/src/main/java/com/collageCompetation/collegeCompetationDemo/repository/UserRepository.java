@@ -1,43 +1,49 @@
 package com.collageCompetation.collegeCompetationDemo.repository;
 
 import com.collageCompetation.collegeCompetationDemo.entity.User;
+import com.collageCompetation.collegeCompetationDemo.entity.User.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param; // Import Param
+import org.springframework.stereotype.Repository;
 
-import java.sql.Date;
+import java.time.LocalDate; // Import LocalDate
 import java.util.List;
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User,Long> {
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
 
-    // Derived query to find user by username
-    Optional<User> findByUsername(String username);
 
-    // Custom Query for Find all users with a specific role
+    // Find users by role (ADMIN or USER)
     @Query("SELECT u FROM User u WHERE u.role = :role")
-    List<User> findUsersByRole(User.Role role);
+    List<User> findUsersByRole(@Param("role") Role role); // Use @Param for clarity
 
-    // Native Query for Count users by role
+    // Native Query: Count users by role
     @Query(value = "SELECT COUNT(*) FROM users WHERE role = ?1", nativeQuery = true)
     int countUsersByRole(String role);
 
-    // JPQL Query for Find users registered for competitions by date
-    @Query("SELECT DISTINCT c.registeredBy FROM Competition c WHERE c.date = :date")
-    List<User> findUsersByCompetitionDate(Date date);
+    // Find users by competition name
+    @Query("SELECT u FROM User u JOIN u.competitions c WHERE c.name = :competitionName")
+    List<User> findUsersByCompetitionName(@Param("competitionName") String competitionName);
 
-    // JPQL Query for Find users registered for competitions by competition name
-    @Query("SELECT DISTINCT c.registeredBy FROM Competition c WHERE c.competitionName = :competitionName")
-    List<User> findUsersByCompetitionName(String competitionName);
 
-    // Native Query for Find users by competition date
-    @Query(value = "SELECT DISTINCT u.* FROM users u " +
-            "JOIN competitions c ON u.id = c.user_id " +
-            "WHERE c.date = ?1", nativeQuery = true)
-    List<User> findUsersByCompetitionDateNative(Date date);
+    // Find users by competition date
+    // MODIFIED: Changed parameter type from String to LocalDate
+    @Query("SELECT u FROM User u JOIN u.competitions c WHERE c.date = :date")
+    List<User> findUsersByCompetitionDate(@Param("date") LocalDate date); // <-- Changed parameter type to LocalDate
 
-    // Native Query for Find users by competition name
-    @Query(value = "SELECT DISTINCT u.* FROM users u " +
-            "JOIN competitions c ON u.id = c.user_id " +
-            "WHERE c.competition_name = ?1", nativeQuery = true)
-    List<User> findUsersByCompetitionNameNative(String competitionName);
+    // You might also need this for fetching a single user by username with competitions
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.competitions WHERE u.username = :username")
+    Optional<User> findByUsernameWithCompetitions(@Param("username") String username);
+
+    // Custom query to fetch all users and their associated competitions eagerly
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.competitions") // Added DISTINCT to avoid duplicates
+    List<User> findAllWithCompetitions();
+
+    // Standard method to find by username
+    Optional<User> findByUsername(String username);
+
+    // Method to find by email
+    Optional<User> findByEmail(String email);
 }

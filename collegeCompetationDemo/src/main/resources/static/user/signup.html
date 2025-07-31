@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Signup</title> <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="form-container">
+    <h2>User Signup</h2>
+    <form id="userSignupForm">
+        <input type="text" name="username" placeholder="Username" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="text" name="collegeName" placeholder="College Name" required>
+    <input type="password" name="password" placeholder="Password" required>
+        <button type="submit"><a href="register.html">Sign Up </a></button>
+    </form>
+    <p>Already have an account? <a href="login.html">Login</a></p> </div>
+<script>
+    document.getElementById("userSignupForm").addEventListener("submit", async (e) => { // Updated ID
+        e.preventDefault();
+        const data = {
+            username: e.target.username.value,
+            email: e.target.email.value,
+            collegeName: e.target.collegeName.value,
+            password: e.target.password.value
+        };
+
+        try {
+            const res = await fetch("http://localhost:8080/auth/user/signup", { // <--- IMPORTANT: Changed URL to /auth/user/signup
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                const result = await res.json(); // May or may not return JSON, AuthController returns string
+                alert("User registered successfully!");
+                window.location.href = "login.html"; // Redirect to user login after successful signup
+            } else {
+                let errorMessage = "Registration failed!";
+                try {
+                    const errorResult = await res.json();
+                    if (errorResult.message) {
+                        errorMessage = errorResult.message;
+                    } else if (typeof errorResult === 'string') { // If the backend returns a plain string error
+                        errorMessage = errorResult;
+                    }
+                } catch (jsonError) {
+                    // If response is not JSON or parsing fails, use generic message
+                    console.error("Error parsing response:", jsonError);
+                }
+                alert(errorMessage + " Status: " + res.status);
+                console.error("Signup error:", res.status, errorMessage);
+            }
+        } catch (networkError) {
+            alert("Network error: Could not connect to the backend server. Please ensure the server is running and accessible.");
+            console.error("Network error during signup:", networkError);
+        }
+    });
+</script>
+</body>
+</html>
